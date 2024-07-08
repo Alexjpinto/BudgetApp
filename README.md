@@ -1,16 +1,17 @@
-Description:
+# Budget App
 
-This repository contains a simple yet powerful Python-based budget application designed to help you manage your finances. With this budget app, you can:
+A simple graphical budget application written in Python using `tkinter` and `matplotlib`. This app helps you manage your income and expenses efficiently, with the ability to categorize transactions, view a history of all transactions, and visualize income and expense distributions using pie charts.
 
-Add Income: Record your sources of income with categories and optional descriptions.
-Add Expenses: Track your expenses by category and keep notes with descriptions.
-View Summaries: Get detailed summaries of your income and expenses categorized for easy understanding.
-Check Balance: Always know your current financial balance by comparing total income and total expenses.
-This project is ideal for those who want a straightforward way to manage their personal finances without the need for complex software. The app runs in a text-based interface and is perfect for quick, on-the-go budget tracking.
+## Features
 
-Features:
+- Add income and expenses with categories and descriptions
+- View a history of all transactions
+- Visualize income and expenses by category with pie charts
+- Simple graphical user interface
+- Executable file with custom icon
 
-Simple and intuitive user interface
-Categorized income and expense tracking
-Financial summaries and balance calculation
-Easy to run and modify
+## Installation
+
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/YOUR_USERNAME/budget-app.git
