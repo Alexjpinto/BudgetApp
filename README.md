@@ -14,4 +14,4 @@ A simple graphical budget application written in Python using `tkinter` and `mat
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/YOUR_USERNAME/budget-app.git
+   git clone https://github.com/Alexjpinto/budget-app.git
