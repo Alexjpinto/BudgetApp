@@ -1,86 +1,99 @@
-class BudgetApp:
-    def __init__(self):
-        self.transactions = {
-            'income': [],
-            'expense': []
-        }
-    
-    def add_income(self, amount, category, description=''):
-        if amount > 0:
-            self.transactions['income'].append({'amount': amount, 'category': category, 'description': description})
-            print(f"Income added: {amount} in {category}")
-        else:
-            print("Income amount must be positive.")
-    
-    def add_expense(self, amount, category, description=''):
-        if amount > 0:
-            self.transactions['expense'].append({'amount': amount, 'category': category, 'description': description})
-            print(f"Expense added: {amount} in {category}")
-        else:
-            print("Expense amount must be positive.")
-    
-    def get_total_income(self):
-        return sum(item['amount'] for item in self.transactions['income'])
-    
-    def get_total_expense(self):
-        return sum(item['amount'] for item in self.transactions['expense'])
-    
-    def get_balance(self):
-        return self.get_total_income() - self.get_total_expense()
-    
-    def get_summary_by_category(self, type_):
-        summary = {}
-        for item in self.transactions[type_]:
-            if item['category'] not in summary:
-                summary[item['category']] = 0
-            summary[item['category']] += item['amount']
-        return summary
-    
-    def display_summary(self):
-        print("Income Summary by Category:")
-        for category, amount in self.get_summary_by_category('income').items():
-            print(f"{category}: {amount}")
-        
-        print("\nExpense Summary by Category:")
-        for category, amount in self.get_summary_by_category('expense').items():
-            print(f"{category}: {amount}")
-        
-        print(f"\nTotal Income: {self.get_total_income()}")
-        print(f"Total Expense: {self.get_total_expense()}")
-        print(f"Balance: {self.get_balance()}")
+import tkinter as tk
+from tkinter import ttk, messagebox
+import json
+import os
 
-def main():
-    app = BudgetApp()
-    while True:
-        print("\nBudget App Menu:")
-        print("1. Add Income")
-        print("2. Add Expense")
-        print("3. View Summary")
-        print("4. Exit")
-        
-        choice = input("Choose an option: ")
-        
-        if choice == '1':
-            amount = float(input("Enter income amount: "))
-            category = input("Enter income category: ")
-            description = input("Enter description (optional): ")
-            app.add_income(amount, category, description)
-        
-        elif choice == '2':
-            amount = float(input("Enter expense amount: "))
-            category = input("Enter expense category: ")
-            description = input("Enter description (optional): ")
-            app.add_expense(amount, category, description)
-        
-        elif choice == '3':
-            app.display_summary()
-        
-        elif choice == '4':
-            print("Exiting the app.")
-            break
-        
-        else:
-            print("Invalid choice. Please try again.")
+class BudgetApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Budget App")
+
+        # Setup UI
+        self.setup_ui()
+
+        # Load transaction history
+        self.load_history()
+
+    def setup_ui(self):
+        self.amount_var = tk.StringVar()
+        self.category_var = tk.StringVar()
+        self.description_var = tk.StringVar()
+        self.type_var = tk.StringVar(value='Income')
+
+        ttk.Label(self.root, text="Amount:").grid(row=0, column=0, padx=10, pady=10)
+        ttk.Entry(self.root, textvariable=self.amount_var).grid(row=0, column=1, padx=10, pady=10)
+
+        ttk.Label(self.root, text="Category:").grid(row=1, column=0, padx=10, pady=10)
+        ttk.Entry(self.root, textvariable=self.category_var).grid(row=1, column=1, padx=10, pady=10)
+
+        ttk.Label(self.root, text="Description:").grid(row=2, column=0, padx=10, pady=10)
+        ttk.Entry(self.root, textvariable=self.description_var).grid(row=2, column=1, padx=10, pady=10)
+
+        ttk.Label(self.root, text="Type:").grid(row=3, column=0, padx=10, pady=10)
+        ttk.Combobox(self.root, textvariable=self.type_var, values=['Income', 'Expense']).grid(row=3, column=1, padx=10, pady=10)
+
+        ttk.Button(self.root, text="Add Transaction", command=self.add_transaction).grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+
+        self.history_tree = ttk.Treeview(self.root, columns=('Amount', 'Category', 'Description', 'Type'), show='headings')
+        self.history_tree.heading('Amount', text='Amount')
+        self.history_tree.heading('Category', text='Category')
+        self.history_tree.heading('Description', text='Description')
+        self.history_tree.heading('Type', text='Type')
+        self.history_tree.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+
+    def add_transaction(self):
+        try:
+            amount = float(self.amount_var.get())
+            category = self.category_var.get()
+            description = self.description_var.get()
+            type_ = self.type_var.get()
+
+            if amount <= 0:
+                raise ValueError
+
+            transaction = {
+                'amount': amount,
+                'category': category,
+                'description': description,
+                'type': type_
+            }
+
+            self.save_transaction(transaction)
+            self.history_tree.insert('', 'end', values=(amount, category, description, type_))
+            self.clear_form()
+        except ValueError:
+            messagebox.showerror("Invalid input", "Please enter a valid amount")
+
+    def save_transaction(self, transaction):
+        if not os.path.exists('transactions.json'):
+            with open('transactions.json', 'w') as file:
+                json.dump([], file)
+
+        with open('transactions.json', 'r') as file:
+            transactions = json.load(file)
+
+        transactions.append(transaction)
+
+        with open('transactions.json', 'w') as file:
+            json.dump(transactions, file)
+
+    def load_history(self):
+        if not os.path.exists('transactions.json'):
+            return
+
+        with open('transactions.json', 'r') as file:
+            transactions = json.load(file)
+
+        for transaction in transactions:
+            self.history_tree.insert('', 'end', values=(transaction['amount'], transaction['category'], transaction['description'], transaction['type']))
+
+    def clear_form(self):
+        self.amount_var.set('')
+        self.category_var.set('')
+        self.description_var.set('')
+        self.type_var.set('Income')
 
 if __name__ == "__main__":
-    main()
+    root = tk.Tk()
+    app = BudgetApp(root)
+    root.mainloop()
