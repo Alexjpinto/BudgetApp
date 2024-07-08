@@ -2,11 +2,15 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import json
 import os
+import matplotlib.pyplot as plt
 
 class BudgetApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Budget App")
+        
+        # Set the application icon
+        self.root.iconbitmap('app_icon.ico')
 
         # Setup UI
         self.setup_ui()
@@ -33,13 +37,15 @@ class BudgetApp:
         ttk.Combobox(self.root, textvariable=self.type_var, values=['Income', 'Expense']).grid(row=3, column=1, padx=10, pady=10)
 
         ttk.Button(self.root, text="Add Transaction", command=self.add_transaction).grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+        ttk.Button(self.root, text="Show Income Pie Chart", command=lambda: self.show_pie_chart('income')).grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+        ttk.Button(self.root, text="Show Expense Pie Chart", command=lambda: self.show_pie_chart('expense')).grid(row=6, column=0, columnspan=2, padx=10, pady=10)
 
         self.history_tree = ttk.Treeview(self.root, columns=('Amount', 'Category', 'Description', 'Type'), show='headings')
         self.history_tree.heading('Amount', text='Amount')
         self.history_tree.heading('Category', text='Category')
         self.history_tree.heading('Description', text='Description')
         self.history_tree.heading('Type', text='Type')
-        self.history_tree.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+        self.history_tree.grid(row=7, column=0, columnspan=2, padx=10, pady=10)
 
     def add_transaction(self):
         try:
@@ -92,6 +98,38 @@ class BudgetApp:
         self.category_var.set('')
         self.description_var.set('')
         self.type_var.set('Income')
+
+    def get_summary_by_category(self, type_):
+        summary = {}
+        if not os.path.exists('transactions.json'):
+            return summary
+
+        with open('transactions.json', 'r') as file:
+            transactions = json.load(file)
+
+        for transaction in transactions:
+            if transaction['type'].lower() == type_:
+                category = transaction['category']
+                amount = transaction['amount']
+                if category in summary:
+                    summary[category] += amount
+                else:
+                    summary[category] = amount
+        return summary
+
+    def show_pie_chart(self, type_):
+        summary = self.get_summary_by_category(type_)
+        if not summary:
+            messagebox.showinfo("No Data", f"No {type_} transactions found.")
+            return
+
+        categories = list(summary.keys())
+        amounts = list(summary.values())
+
+        plt.figure(figsize=(8, 6))
+        plt.pie(amounts, labels=categories, autopct='%1.1f%%', startangle=140)
+        plt.title(f'{type_.capitalize()} Distribution by Category')
+        plt.show()
 
 if __name__ == "__main__":
     root = tk.Tk()
